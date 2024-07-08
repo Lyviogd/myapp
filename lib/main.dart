@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -18,7 +20,8 @@ class MyApp extends StatelessWidget {
         title: 'Namer App',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 79, 228, 20)),
+          colorScheme:
+              ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 79, 228, 20)),
         ),
         home: MyHomePage(),
       ),
@@ -29,18 +32,27 @@ class MyApp extends StatelessWidget {
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
 
-  void getNext() {
-    current = WordPair.random();
+  Map<WordPair, bool> shown = new Map(); // List de mot proposé et etat
+  var favorites = <WordPair>[];
+
+  void add2shown() {
+    final tmp = <WordPair, bool>{current: false};
+    shown.addAll(tmp);
     notifyListeners();
   }
 
-  var favorites = <WordPair>[];
-  void toggleFavorite(){
-    if(favorites.contains(current)){
+  void toggleFavorite() {
+    if (favorites.contains(current)) {
       favorites.remove(current);
-    }else{
+    } else {
       favorites.add(current);
     }
+    notifyListeners();
+  }
+
+  void getNext() {
+    if (!current.first.isEmpty) add2shown();
+    current = WordPair.random();
     notifyListeners();
   }
 }
@@ -53,62 +65,57 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   var selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
+    Widget page;
+    switch (selectedIndex) {
+      case 0:
+        page = GeneratorPage();
+        break;
+      case 1:
+        page = FavoritePage();
+        break;
+      default:
+        throw UnimplementedError('no widget for $selectedIndex');
+    }
 
-  Widget page;
-  switch (selectedIndex) {
-    case 0:
-      page = GeneratorPage();
-      break;
-    case 1:
-      page = FavoritePage();
-      break;
-    default:
-      throw UnimplementedError('no widget for $selectedIndex');
-  }
-
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Scaffold(
-          body: Row(
-            children: [
-              SafeArea(
-                child: NavigationRail(
-                  extended: constraints.maxWidth >= 600,
-                  destinations: [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.home),
-                      label: Text('Home'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.favorite),
-                      label: Text('Favorites'),
-                    ),
-                  ],
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (value) {
-                    setState(() {
-                      selectedIndex = value;
-                    });
-                  },
-                ),
+    return LayoutBuilder(builder: (context, constraints) {
+      return Scaffold(
+        body: Row(
+          children: [
+            SafeArea(
+              child: NavigationRail(
+                extended: constraints.maxWidth >= 600,
+                destinations: [
+                  NavigationRailDestination(
+                    icon: Icon(Icons.home),
+                    label: Text('Home'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.favorite),
+                    label: Text('Favorites'),
+                  ),
+                ],
+                selectedIndex: selectedIndex,
+                onDestinationSelected: (value) {
+                  setState(() {
+                    selectedIndex = value;
+                  });
+                },
               ),
-              Expanded(
-                child: Container(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  child: page,
-                ),
+            ),
+            Expanded(
+              child: Container(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                child: page,
               ),
-            ],
-          ),
-        );
-      }
-    );
+            ),
+          ],
+        ),
+      );
+    });
   }
 }
 
@@ -117,6 +124,7 @@ class GeneratorPage extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var pair = appState.current;
+    var list = appState.shown;
 
     IconData icon;
     if (appState.favorites.contains(pair)) {
@@ -129,6 +137,11 @@ class GeneratorPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          ListView(
+            children: [
+///
+          ]
+          ),
           BigCard(pair: pair),
           SizedBox(height: 10),
           Row(
@@ -164,24 +177,27 @@ class FavoritePage extends StatelessWidget {
     var appState = context.watch<MyAppState>();
     var listFav = appState.favorites;
 
-    if(listFav.isEmpty){
+    if (listFav.isEmpty) {
       return Center(
         child: Text("Pas de favori"),
       );
     }
-    
+
     return ListView(
       children: [
-        Padding(padding: const EdgeInsets.all(20),
-        child: Text("Il y a ${listFav.length}.."),
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text("Il y a ${listFav.length}.."),
         ),
-        for(var pair in listFav)
-        ListTile(leading: Icon(Icons.favorite), title: Text(pair.asLowerCase),)
+        for (var pair in listFav)
+          ListTile(
+            leading: Icon(Icons.favorite),
+            title: Text(pair.asLowerCase),
+          )
       ],
     );
   }
 }
-
 
 class BigCard extends StatelessWidget {
   const BigCard({
@@ -199,23 +215,22 @@ class BigCard extends StatelessWidget {
       color: theme.colorScheme.onSecondary,
     );
 
-    final stylebold = theme.textTheme.displayMedium!.copyWith(fontWeight: FontWeight.bold);
+    final stylebold =
+        theme.textTheme.displayMedium!.copyWith(fontWeight: FontWeight.bold);
 
     return Card(
       color: theme.colorScheme.secondary,
-      
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Text.rich(
           TextSpan(
-            text: pair.first, 
-          children:<TextSpan>[
-            TextSpan(text: pair.second, style: stylebold)
-          ],
-          style: style
-          ),
+              text: pair.first,
+              children: <TextSpan>[
+                TextSpan(text: pair.second, style: stylebold)
+              ],
+              style: style),
           semanticsLabel: "${pair.first} ${pair.second}",
-          ),
+        ),
       ),
     );
   }
