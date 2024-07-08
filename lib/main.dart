@@ -124,8 +124,7 @@ class GeneratorPage extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var pair = appState.current;
-    var list = appState.shown;
-
+    
     IconData icon;
     if (appState.favorites.contains(pair)) {
       icon = Icons.favorite;
@@ -137,11 +136,7 @@ class GeneratorPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          ListView(
-            children: [
-///
-          ]
-          ),
+          Historic(pair:pair),
           BigCard(pair: pair),
           SizedBox(height: 10),
           Row(
@@ -169,7 +164,18 @@ class GeneratorPage extends StatelessWidget {
   }
 }
 
-// ...
+class Historic extend StatelessWidget {
+  @override
+  Widget build(BuildContext context){
+  var list = appState.shown;
+
+    return ListView(
+            children: [
+              
+          ]
+          );
+  }
+}
 
 class FavoritePage extends StatelessWidget {
   @override
