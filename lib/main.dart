@@ -1,4 +1,4 @@
-import 'dart:ffi';
+//import 'dart:ffi';
 
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
@@ -32,13 +32,14 @@ class MyApp extends StatelessWidget {
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
 
-  Map<WordPair, bool> shown = new Map(); // List de mot proposé et etat
+  Map<String, bool> shown = Map(); // List de mot proposé et etat
   var favorites = <WordPair>[];
 
   void add2shown() {
-    final tmp = <WordPair, bool>{current: false};
-    shown.addAll(tmp);
-    notifyListeners();
+    var tmp_state = false;
+    if (favorites.contains(current)) tmp_state = true;
+    shown.addAll({current.asString: tmp_state});
+    print("shown");
   }
 
   void toggleFavorite() {
@@ -51,8 +52,8 @@ class MyAppState extends ChangeNotifier {
   }
 
   void getNext() {
-    if (!current.first.isEmpty) add2shown();
     current = WordPair.random();
+    add2shown();
     notifyListeners();
   }
 }
@@ -124,7 +125,7 @@ class GeneratorPage extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var pair = appState.current;
-    
+
     IconData icon;
     if (appState.favorites.contains(pair)) {
       icon = Icons.favorite;
@@ -136,7 +137,7 @@ class GeneratorPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Historic(pair:pair),
+          Historic(),
           BigCard(pair: pair),
           SizedBox(height: 10),
           Row(
@@ -164,17 +165,29 @@ class GeneratorPage extends StatelessWidget {
   }
 }
 
-class Historic extend StatelessWidget {
+class Historic extends StatelessWidget {
   @override
-  Widget build(BuildContext context){
-  var list = appState.shown;
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    var history = appState.shown;
+
+    if (history.isEmpty) {
+      return Center(
+        child: Text(""),
+      );
+    }
 
     return ListView(
-            children: [
-              
-          ]
-          );
+      children: [
+        for (var word in history.entries)
+          ListTile(
+            leading: Icon(Icons.assessment),
+            title: Text(word.key),
+          )
+      ],
+    );
   }
+  //---
 }
 
 class FavoritePage extends StatelessWidget {
