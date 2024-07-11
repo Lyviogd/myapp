@@ -31,16 +31,19 @@ class MyApp extends StatelessWidget {
 
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
+  var simpleHirotic =  <WordPair>[];
 
   Map<String, bool> shown = Map(); // List de mot proposé et etat
   var favorites = <WordPair>[];
 
+/*
   void add2shown() {
     var tmp_state = false;
     if (favorites.contains(current)) tmp_state = true;
     shown.addAll({current.asString: tmp_state});
     print("shown");
   }
+*/
 
   void toggleFavorite() {
     if (favorites.contains(current)) {
@@ -51,9 +54,15 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void addHistory(var tmp) {
+    simpleHirotic.add(tmp);
+    notifyListeners();
+
+  }
+
   void getNext() {
     current = WordPair.random();
-    add2shown();
+
     notifyListeners();
   }
 }
@@ -157,6 +166,12 @@ class GeneratorPage extends StatelessWidget {
                 },
                 child: Text('Next'),
               ),
+              ElevatedButton(
+                onPressed: () {
+                  appState.addHistory(pair);
+                },
+                child: Text('add'),
+              ),
             ],
           ),
         ],
@@ -165,11 +180,16 @@ class GeneratorPage extends StatelessWidget {
   }
 }
 
-class Historic extends StatelessWidget {
+class Historic extends StatefulWidget {
+  @override
+  State<Historic> createState() => _HistoricState();
+}
+
+class _HistoricState extends State<Historic> {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    var history = appState.shown;
+    var history = appState.simpleHirotic;
 
     if (history.isEmpty) {
       return Center(
@@ -179,15 +199,16 @@ class Historic extends StatelessWidget {
 
     return ListView(
       children: [
-        for (var word in history.entries)
+        //Padding(padding: const EdgeInsets.all(5),
+         Text("Il y a ${history.length}"),
+        /*for (var word in history)
           ListTile(
-            leading: Icon(Icons.assessment),
-            title: Text(word.key),
-          )
+            leading: Icon(Icons.favorite_outline_sharp),
+            title: Text(word.asLowerCase),
+          )*/
       ],
     );
   }
-  //---
 }
 
 class FavoritePage extends StatelessWidget {
